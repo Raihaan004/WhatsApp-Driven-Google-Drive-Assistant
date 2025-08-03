@@ -1,0 +1,682 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7afd6ba8-ffdd-49cc-843e-22c837b51eb4",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-whatsapp-logged",
+        "options": {}
+      },
+      "id": "61140621-e6e2-4aac-b247-d1385b70e23d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -832
+      ],
+      "webhookId": "9e3c9215-4688-444a-9743-94c65538e55e"
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = items[0].json.body.Body;\nconst parts = body.split(' ');\nconst command = (parts[0] || '').toUpperCase();\nconst path = parts[1] || null;\nconst arg1 = parts[2] || null;\n\nif (!command || !path) {\n  throw new Error('Invalid format. Use: COMMAND /path [argument]');\n}\n\nif (command === 'DELETE' && arg1 !== 'CONFIRM') {\n  throw new Error(`Safety check failed. To delete, use: DELETE ${path} CONFIRM`);\n}\nif (command === 'MOVE' && !arg1) {\n  throw new Error(`Destination missing. To move, use: MOVE ${path} /destination/folder`);\n}\n\nconst cleanedPath = path.startsWith('/') ? path.substring(1) : path;\nconst cleanedArg1 = arg1 && arg1.startsWith('/') ? arg1.substring(1) : arg1;\n\nreturn [{\n  json: {\n    command: command,\n    path: cleanedPath,\n    fileName: cleanedPath.split('/').pop(),\n    folderPath: cleanedPath.substring(0, cleanedPath.lastIndexOf('/')) || '',\n    argument: cleanedArg1,\n    originalUser: items[0].json.body.From\n  }\n}];"
+      },
+      "id": "02a73197-a6f4-41be-b79b-0526436dc8ea",
+      "name": "Parse Command",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -832
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "82f9fec9-a28c-43d0-b8c9-d5ae227effe3",
+      "name": "Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "folder",
+        "operation": "search"
+      },
+      "id": "9882af3f-2318-4edb-8858-4c96afc265b7",
+      "name": "Find Folder by Name",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -1232
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search"
+      },
+      "id": "ac475eea-52bb-44f4-8a76-6813c9fbb4da",
+      "name": "List Files in Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -1232
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const files = items.map(item => `📄 ${item.json.name}`);\nconst folderName = $('Find Folder by Name').item.json.name;\n\nif (files.length === 0) {\n  return [{ json: { reply: `No files found in folder '${folderName}'.` } }];\n}\n\nconst reply = `Files in '${folderName}':\\n` + files.join('\\n');\nreturn [{ json: { reply } }];"
+      },
+      "id": "d5e96519-b8c7-4205-b193-211959873c27",
+      "name": "Format List Reply",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -1232
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search"
+      },
+      "id": "2585b525-c438-4b7f-a368-7381ff118315",
+      "name": "Find File to Delete",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -1024
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "name": "={{ $('Parse Command').item.json.fileName }}",
+        "options": {}
+      },
+      "id": "125dac58-d6ff-49f5-85f3-4c9af3407b4e",
+      "name": "Delete File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -1024
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const fileName = $('Find File to Delete').item.json.name;\nconst reply = `✅ Successfully deleted file: ${fileName}`;\nreturn [{ json: { reply } }];"
+      },
+      "id": "9b603dae-96c6-4fa6-a0a1-6e795b0f0c91",
+      "name": "Format Delete Reply",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -1024
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search"
+      },
+      "id": "af703b5e-6b22-44ac-92f4-9d6eb364951e",
+      "name": "Find File to Move",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -832
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "folder",
+        "operation": "search"
+      },
+      "id": "386e7a4e-1339-4ee4-83d2-b2e4bb30b0d1",
+      "name": "Find Destination Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -832
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "update",
+        "fileId": "={{$('Find File to Move').item.json.id}}",
+        "updateFields": {},
+        "options": {}
+      },
+      "id": "8efdff5f-0247-4447-82bf-e12f58a48747",
+      "name": "Move File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -832
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const fileName = $('Find File to Move').item.json.name;\nconst folderName = $('Find Destination Folder').item.json.name;\nconst reply = `✅ Successfully moved ${fileName} to ${folderName}`;\nreturn [{ json: { reply } }];"
+      },
+      "id": "a49c3beb-0694-45dc-a375-759a90e806b8",
+      "name": "Format Move Reply",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "search"
+      },
+      "id": "da82ba0f-8c31-4621-a455-a680295f1c19",
+      "name": "Find File to Summarize",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -624
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "download",
+        "fileId": "={{$last.items[0].json.id}}",
+        "options": {}
+      },
+      "id": "1d9ce408-8375-4822-84b3-4c85db40f3f1",
+      "name": "Download File Content",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -624
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZpJB0BcjhxAMom3C",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get the AI's response text\nconst summary = items[0].json.text;\n\n// Get the original file name for context\nconst fileName = $('Find File to Summarize').item.json.name;\n\n// Create the final message for WhatsApp\nconst reply = `📝 AI Summary for ${fileName}:\\n\\n${summary}`;\n\nreturn [{ json: { reply: reply } }];"
+      },
+      "id": "04311582-03c5-45dc-8bbf-6a6b5ff3481a",
+      "name": "Format Summary Reply",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "from": "whatsapp:YOUR_TWILIO_SANDBOX_NUMBER",
+        "to": "={{$('Parse Command').item.json.originalUser}}",
+        "message": "={{$json.reply}}",
+        "options": {}
+      },
+      "id": "e5bc8597-0f92-466e-a264-f15505a47464",
+      "name": "Send WhatsApp Reply",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -832
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "rdQE4rCx4uc1zYbo",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "3d080bc2-dd88-496e-82a0-a086f31d53d9",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -832
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const errorMessage = items[0].json.error.message;\n\n// Add a user-friendly prefix to the error message.\nconst finalMessage = `❗️ Oops! An error occurred: ${errorMessage}`;\n\nreturn [{ json: { reply: finalMessage } }];"
+      },
+      "id": "c0244641-ef5d-44c5-b0fc-e08f0b4ed1b5",
+      "name": "Format Error Reply",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "from": "+14155238886",
+        "to": "{{ $('Webhook').item.json.body.From }}",
+        "toWhatsapp": true,
+        "message": "=❗️ An error occurred: {{ $json.error.message }}",
+        "options": {}
+      },
+      "id": "f1335dea-feb2-438a-ad85-11d39fd58cda",
+      "name": "Send Error Reply",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -368
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "rdQE4rCx4uc1zYbo",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sheetId": "https://docs.google.com/spreadsheets/d/1iZwL5okl_Qj0yYnN-V_YwPz82gGMt4P32tLBt1Kv9-k/edit?usp=sharing",
+        "range": "A:E",
+        "options": {}
+      },
+      "id": "580eb3b9-8e72-4988-99ca-e74d91e23407",
+      "name": "Log Command to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -832
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IFniYvtfZmHiixLB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "operation": "create",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "name": "ChatGPT",
+        "instructions": "=You are an expert summarization assistant. Your sole purpose is to read the text provided and create a concise, bullet-point digest. Focus only on the main points of the document and do not add any external information or commentary.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        992,
+        -576
+      ],
+      "id": "5f5b2643-0f3f-4135-b3b6-0216b0da60f9",
+      "name": "Create an assistant",
+      "credentials": {
+        "openAiApi": {
+          "id": "xpUwxk6Xlmq9VqdO",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Command": {
+      "main": [
+        [
+          {
+            "node": "Log Command to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Command": {
+      "main": [
+        [
+          {
+            "node": "Find Folder by Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find File to Delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find File to Move",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find File to Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Folder by Name": {
+      "main": [
+        [
+          {
+            "node": "List Files in Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Files in Folder": {
+      "main": [
+        [
+          {
+            "node": "Format List Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Reply": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find File to Delete": {
+      "main": [
+        [
+          {
+            "node": "Delete File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete File": {
+      "main": [
+        [
+          {
+            "node": "Format Delete Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Delete Reply": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find File to Move": {
+      "main": [
+        [
+          {
+            "node": "Find Destination Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Destination Folder": {
+      "main": [
+        [
+          {
+            "node": "Move File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move File": {
+      "main": [
+        [
+          {
+            "node": "Format Move Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Move Reply": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find File to Summarize": {
+      "main": [
+        [
+          {
+            "node": "Download File Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary Reply": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Error Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Command to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Route Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File Content": {
+      "main": [
+        [
+          {
+            "node": "Create an assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an assistant": {
+      "main": [
+        [
+          {
+            "node": "Format Summary Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3eb721e1-b1a9-4a84-b29b-cec038885eb0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ebf165574bcf409aa72a35cafb28c8a897dbd84fa5dfeda60d5f3ea065dcb0a0"
+  },
+  "id": "n7Q3gP6CT0TgJ2q4",
+  "tags": []
+}
