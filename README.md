@@ -8,11 +8,11 @@ This project, created for an internship task, is a fully functional assistant th
 
 ### ✅ Features
 
-* [cite_start]**List Files:** Get a list of all files in a specified Google Drive folder. [cite: 38]
-* [cite_start]**Move Files:** Move any file to a different folder within your Drive. [cite: 40]
-* [cite_start]**Delete Files:** Securely delete files with a confirmation step. [cite: 39]
-* [cite_start]**AI Summarization:** Get a concise, bullet-point summary of text documents (`.pdf`, `.docx`, `.txt`) using OpenAI. [cite: 41, 42]
-* [cite_start]**Audit Logging:** Every command received is automatically logged in a Google Sheet for security and monitoring. [cite: 52]
+* **List Files:** Get a list of all files in a specified Google Drive folder. 
+* **Move Files:** Move any file to a different folder within your Drive. 
+* **Delete Files:** Securely delete files with a confirmation step. 
+* **AI Summarization:** Get a concise, bullet-point summary of text documents (`.pdf`, `.docx`, `.txt`) using OpenAI. 
+* **Audit Logging:** Every command received is automatically logged in a Google Sheet for security and monitoring.
 
 ### 🛠️ Tech Stack
 
@@ -38,8 +38,8 @@ Make sure you have the following installed and configured:
 #### **2. Clone the Repository**
 
 ```bash
-git clone <your-repository-url>
-cd <repository-folder>
+git clone https://github.com/Raihaan004/WhatsApp-Driven-Google-Drive-Assistant.git
+cd WhatsApp-Driven-Google-Drive-Assistant
 ```
 
 #### **3. Configure Your Environment**
@@ -95,11 +95,9 @@ You can now send commands from your WhatsApp number to your Twilio number.
 
 | Command | Format | Description |
 | :--- | :--- | :--- |
-| **LIST** | `LIST /FolderName` | [cite_start]Lists all files in the specified folder. [cite: 38] |
-| **DELETE** | `DELETE /path/to/file.pdf CONFIRM` | Deletes a file. [cite_start]The `CONFIRM` keyword is required. [cite: 39] |
-| **MOVE** | `MOVE /path/to/file.pdf /destination_folder` | [cite_start]Moves a file to a new folder. [cite: 40] |
-| **SUMMARY**| `SUMMARY /path/to/document.txt` | [cite_start]Generates a summary of the specified document. [cite: 41] |
+| **LIST** | `LIST /FolderName` | Lists all files in the specified folder. |
+| **DELETE** | `DELETE /path/to/file.pdf CONFIRM` | Deletes a file. The `CONFIRM` keyword is required. |
+| **MOVE** | `MOVE /path/to/file.pdf /destination_folder` | Moves a file to a new folder. |
+| **SUMMARY**| `SUMMARY /path/to/document.txt` |Generates a summary of the specified document. |
 
-### 📄 License
 
-[cite_start]This project is licensed under the MIT License. [cite: 20]
