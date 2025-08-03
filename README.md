@@ -4,7 +4,7 @@ This project, created for an internship task, is a fully functional assistant th
 
 ### ✨ Demo Output
 
-![WhatsApp Drive Assistant Demo](https://storage.googleapis.com/gemini-generative-ai-public/readme-demo-1/whatsapp-drive-assistant-demo.png)
+![WhatsApp Drive Assistant Demo](https://raw.githubusercontent.com/Raihaan004/WhatsApp-Driven-Google-Drive-Assistant/refs/heads/main/demo.png)
 
 ### ✅ Features
 
